@@ -1,145 +1,276 @@
-CIB DETECTION SYSTEM - PROJECT DOCUMENTATION
-==============================================================================
+# Detection of Coordinated Inauthentic Behavior and Bot Networks on Social Media
 
-PROJECT DETAILS
----------------
-Project Title  : Detection of Coordinated Inauthentic Behavior and Bot Networks
-                 on Social Media Platforms
+![Python](https://img.shields.io/badge/Python-3.10+-blue)
+![Machine Learning](https://img.shields.io/badge/Machine%20Learning-XGBoost-green)
+![NLP](https://img.shields.io/badge/NLP-BERT-orange)
+![Graph Analytics](https://img.shields.io/badge/Graph%20Theory-NetworkX-purple)
 
-==============================================================================
+## Overview
 
-1. EXECUTIVE SUMMARY
---------------------
-This project delivers an end-to-end automated pipeline for detecting Coordinated 
-Inauthentic Behavior (CIB) and malicious bot networks on social media. Unlike 
-traditional spam filters that look for high-volume posting, this system uses a 
-multi-modal approach to detect *behavioral coordination*.
+This project presents an end-to-end framework for detecting Coordinated Inauthentic Behavior (CIB) and malicious bot networks on social media platforms.
 
-It combines three advanced techniques:
-  A. Social Network Analysis (Graph Theory) to find clusters of coordinated users.
-  B. Stylometric NLP to detect automated writing styles and repetitive content.
-  C. Unsupervised Machine Learning to identify anomalies without labeled data.
+Unlike traditional spam detection systems that primarily rely on posting frequency, this framework combines behavioral analytics, natural language processing, graph theory, and machine learning to identify coordinated campaigns that mimic legitimate user activity.
 
-The system is modular, production-ready, and includes an interactive dashboard 
-for real-time analysis.
+The system integrates:
 
-2. SYSTEM ARCHITECTURE & MODULES
---------------------------------
-The project is built on a modular architecture where each component handles a 
-specific stage of the detection pipeline.
+* Social Network Analysis
+* Stylometric Natural Language Processing
+* Temporal Behavioral Analysis
+* Semantic Similarity Detection
+* Supervised and Unsupervised Machine Learning
+* Interactive Visualization and Monitoring
 
-[Module 1: Data Ingestion]
-- created a synthetic dataset to anlyse .
+---
 
-[Module 2: Preprocessing]
-- File: nlpr/preprocessing/
-- Purpose: Cleans raw social media text for analysis.
-- Actions:
-  * Removes URLs, mentions, and emojis.
-  * Normalizes text (lowercase, stemming).
-  * Detects language to filter non-English content.
+## Key Features
 
-[Module 3: Feature Extraction (The Core Intelligence)]
-- File: nlpr/features/
-- Purpose: Converts raw behavior into 120 numerical features.
-- Components:
-  A. Stylometry: Measures writing style (Sentence length, vocabulary richness, 
-     punctuation ratios) to detect automated text generation.
-  B. Temporal Analysis: Measures timing (Inter-post intervals, burstiness) to 
-     detect automated scheduling (e.g., posting exactly every 15 mins).
-  C. Semantic Analysis: Uses BERT embeddings (384-dim) to detect content 
-     similarity (bots posting identical messages).
+### Social Network Analysis
 
-[Module 4: Graph Construction]
-- File: nlpr/graph/
-- Purpose: Models user interactions as a network.
-- Methodology:
-  * Nodes = Users
-  * Edges = Replies/Mentions/Retweets
-  * Weights = Frequency of interaction
-- Analytics: Calculates Centrality (Who is influential?) and Modularity 
-  (Are there isolated cliques of bots?).
+* User interaction graph construction
+* Community detection
+* Centrality analysis
+* Clique identification
+* Coordinated behavior discovery
 
-[Module 5: Model Training]
-- File: nlpr/models/
-- Purpose: Classifies users as 'Bot' or 'Human'.
-- Models Implemented:
-  A. Supervised: XGBoost, Random Forest, Logistic Regression (High accuracy).
-  B. Unsupervised: DBSCAN, K-Means, Isolation Forest (Finds new bot clusters 
-     without labels).
-- Strategy: Uses "Hard Mode" training, where easy features (Total Posts) are 
-  removed to force the model to learn complex behavioral patterns.
+### Stylometric Analysis
 
-[Module 6: Evaluation]
-- File: nlpr/evaluation/
-- Purpose: Validates model performance.
-- Metrics: Accuracy, Precision, Recall, F1-Score, and Silhouette Score.
-- Feature: Automatically handles dimension mismatches between training and testing.
+* Writing style fingerprinting
+* Vocabulary richness analysis
+* Punctuation behavior analysis
+* Sentence structure analysis
 
-[Module 7: Visualization]
-- File: nlpr/visualization/
-- Purpose: Explains the results to the user.
-- Outputs:
-  * Interactive Dashboard (Plotly): Shows feature importance and performance.
-  * Network Graph (.gexf): Exportable file for Gephi to visualize bot clusters.
+### Temporal Analysis
 
-1. DIRECTORY STRUCTURE
-----------------------
-CIB_Detection_System/
+* Inter-post interval analysis
+* Burst detection
+* Posting regularity measurement
+* Automated scheduling detection
+
+### Semantic Analysis
+
+* BERT Embeddings (384 dimensions)
+* Content similarity measurement
+* Coordinated messaging detection
+
+### Machine Learning Models
+
+**Supervised**
+
+* XGBoost
+* Random Forest
+* Logistic Regression
+
+**Unsupervised**
+
+* DBSCAN
+* Isolation Forest
+* K-Means Clustering
+
+---
+
+## System Architecture
+
+```text
+Raw Social Media Data
+        │
+        ▼
+Data Ingestion
+        │
+        ▼
+Preprocessing
+        │
+        ▼
+Feature Engineering
+(120+ Features)
+        │
+        ▼
+Graph Construction
+        │
+        ▼
+Model Training
+        │
+        ▼
+Evaluation
+        │
+        ▼
+Visualization Dashboard
+```
+
+---
+
+## Feature Engineering
+
+The framework extracts more than 120 behavioral features.
+
+### Stylometric Features
+
+* Average sentence length
+* Vocabulary richness
+* Character distribution
+* Punctuation patterns
+* Capitalization ratios
+
+### Temporal Features
+
+* Average inter-post interval
+* Posting frequency
+* Burstiness score
+* Activity variance
+
+### Semantic Features
+
+* BERT embeddings
+* Content similarity scores
+* Topic consistency metrics
+
+### Graph Features
+
+* Degree Centrality
+* Betweenness Centrality
+* Clustering Coefficient
+* Community Membership
+
+---
+
+## Project Structure
+
+```text
+Behavioral-Anomaly-Detection-for-Social-Media
+│
 ├── data/
-│   ├── raw/                  # Input data
-│   ├── processed/            # Cleaned data
-│   ├── features/             # Feature matrices (120 dims)
-│   ├── graphs/               # NetworkX graph objects
-│   ├── models/               # Saved model artifacts (.pkl)
-│   ├── results/              # Metrics CSVs
-│   └── visualizations/       # Dashboard outputs & Gephi files
-├── nlpr/                     # Source code package
-├── config.yaml               # Configuration settings
-├── main_pipeline.py          # Execution script
-├── requirements.txt          # Python dependencies
-└── README.txt                # This file
+├── preprocessing/
+├── features/
+├── graph/
+├── models/
+├── evaluation/
+├── visualization/
+│
+├── config.yaml
+├── main_pipeline.py
+├── requirements.txt
+└── README.md
+```
 
-1. INSTALLATION
----------------
-1. Unzip the project.
-2. Open terminal in the project folder.
-3. Create and activate virtual environment:
-     python -m venv venv
-     source venv/bin/activate  (Mac/Linux)
-     venv\Scripts\activate     (Windows)
-4. Install dependencies:
-     pip install -r requirements.txt
+---
 
-5. HOW TO RUN
--------------
-Run the pipeline sequentially using `main_pipeline.py`.
+## Model Training
 
-Step 1: Ingest & Clean Data
-   python main_pipeline.py --step ingest
-   python main_pipeline.py --step preprocess
+The framework employs both supervised and unsupervised learning approaches.
 
-Step 2: Generate Features (Stylometry + BERT + Temporal)
-   python main_pipeline.py --step features
+| Model               | Purpose                 |
+| ------------------- | ----------------------- |
+| XGBoost             | Classification          |
+| Random Forest       | Ensemble Learning       |
+| Logistic Regression | Explainable Baseline    |
+| DBSCAN              | Cluster Discovery       |
+| Isolation Forest    | Anomaly Detection       |
+| K-Means             | Behavioral Segmentation |
 
-Step 3: Build Network Graph
-   python main_pipeline.py --step graph
+To prevent shortcut learning, simple indicators such as total post count are removed during training, forcing models to learn deeper behavioral patterns.
 
-Step 4: Train Models (Supervised & Unsupervised)
-   python main_pipeline.py --step train
+---
 
-Step 5: Evaluate Performance
-   python main_pipeline.py --step evaluate
+## Evaluation Metrics
 
-Step 6: Visualize Results
-   python main_pipeline.py --step visualize
-   -> Opens dashboard at http://127.0.0.1:8050/
+Performance is evaluated using:
 
-6. RESULTS & INTERPRETATION
----------------------------
-- **High Accuracy (~78-90%):** The model successfully distinguishes bots based on 
-  inter-post time and stylometric features, not just volume.
-- **Feature Importance:** The top predictor is often `avg_inter_post_time`, 
-  indicating that the system detects the *regularity* of automation.
-- **Clustering:** DBSCAN successfully identifies "noise" (outliers) and dense 
-  clusters of coordinated accounts.
+* Accuracy
+* Precision
+* Recall
+* F1 Score
+* Silhouette Score
+
+The evaluation pipeline also handles feature dimensionality mismatches between training and inference automatically.
+
+---
+
+## Results
+
+### Detection Performance
+
+* Achieved approximately 78–90% classification accuracy
+* Successfully distinguishes coordinated accounts from genuine users
+* Detects behavioral automation rather than simple spam activity
+
+### Important Predictive Features
+
+* Average Inter-Post Time
+* Burstiness Score
+* Stylometric Consistency
+* Semantic Similarity
+
+### Clustering Performance
+
+DBSCAN effectively identifies:
+
+* Coordinated bot communities
+* Behavioral outliers
+* Previously unseen suspicious accounts
+
+---
+
+## Installation
+
+```bash
+git clone https://github.com/warrior-create/Behavioral-Anomaly-Detection-for-Social-Media.git
+
+cd Behavioral-Anomaly-Detection-for-Social-Media
+
+python -m venv venv
+
+source venv/bin/activate
+
+pip install -r requirements.txt
+```
+
+---
+
+## Running the Pipeline
+
+```bash
+python main_pipeline.py --step ingest
+python main_pipeline.py --step preprocess
+python main_pipeline.py --step features
+python main_pipeline.py --step graph
+python main_pipeline.py --step train
+python main_pipeline.py --step evaluate
+python main_pipeline.py --step visualize
+```
+
+Dashboard:
+
+```text
+http://127.0.0.1:8050/
+```
+
+---
+
+## Technology Stack
+
+* Python
+* Scikit-Learn
+* XGBoost
+* NetworkX
+* BERT Embeddings
+* Plotly Dash
+* Pandas
+* NumPy
+* Matplotlib
+
+---
+
+## Applications
+
+* Election Integrity Monitoring
+* Bot Network Detection
+* Misinformation Campaign Analysis
+* Coordinated Influence Operations Detection
+* Social Media Threat Intelligence
+* Platform Trust and Safety
+
+---
+
+## Author
+
+Vansh Goel
+Indian Institute of Technology Mandi
