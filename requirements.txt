@@ -1,0 +1,58 @@
+# ===================================================================
+# CIB Detection System - Python Dependencies
+# ===================================================================
+
+# Core Data Processing
+pandas>=1.5.0,<2.0.0
+numpy>=1.23.0,<2.0.0
+scipy>=1.9.0,<2.0.0
+
+# Machine Learning & AI
+scikit-learn>=1.2.0,<2.0.0
+xgboost>=1.7.0,<2.0.0
+
+# Deep Learning & Transformers
+torch>=1.13.0,<3.0.0
+transformers>=4.25.0,<5.0.0
+sentence-transformers>=2.2.0,<3.0.0
+
+# Natural Language Processing
+textblob>=0.17.0
+langdetect>=1.0.9
+nltk>=3.8
+
+# Social Media APIs
+tweepy>=4.12.0,<5.0.0
+praw>=7.6.0,<8.0.0
+
+# Graph Analysis
+networkx>=3.0,<4.0.0
+python-louvain>=0.16
+
+# Visualization
+plotly>=5.11.0,<6.0.0
+dash>=2.7.0,<3.0.0
+matplotlib>=3.6.0,<4.0.0
+seaborn>=0.12.0,<1.0.0
+
+# Configuration & I/O
+pyyaml>=6.0
+joblib>=1.2.0
+python-dotenv>=0.21.0
+
+# Progress & Utilities
+tqdm>=4.64.0
+colorama>=0.4.6
+
+# Dimensionality Reduction (Optional but Recommended)
+umap-learn>=0.5.3
+
+# For enhanced NLP features
+spacy>=3.5.0
+
+# Testing (Optional)
+pytest>=7.2.0
+pytest-cov>=4.0.0
+
+dash>=2.14.0
+dash-bootstrap-components>=1.5.0

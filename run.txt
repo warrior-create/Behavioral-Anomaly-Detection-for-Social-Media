@@ -1,0 +1,24 @@
+python -m venv venv
+source venv/bin/activate
+
+pip install -r requirements.txt
+
+# skip it as awe are not using API for data
+python main_pipeline.py --step ingest
+
+python main_pipeline.py --step preprocess
+
+python main_pipeline.py --step features
+
+python main_pipeline.py --step graph
+
+python main_pipeline.py --step train
+
+python main_pipeline.py --step evaluate
+
+python main_pipeline.py --step visualize
+
+
+# run all (after ingest)
+python main_pipeline.py --run-all
+

@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Virtual environment
+venv/
+.env
+
+# Mac
+.DS_Store
+
+# Logs
+*.log
+
+# Data
+data/raw/*
+data/processed/*
+data/features/*
+data/graphs/*
+data/results/*
+data/visualizations/*
+
+# Keep folder structure
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+!data/features/.gitkeep
+!data/graphs/.gitkeep
+!data/models/.gitkeep
+!data/results/.gitkeep
+!data/visualizations/.gitkeep
+
+# Data file types
+*.csv
+*.json
+*.pkl
+*.npy
+*.gpickle
+*.gexf

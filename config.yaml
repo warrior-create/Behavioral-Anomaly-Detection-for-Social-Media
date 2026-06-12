@@ -1,0 +1,73 @@
+# config.yaml
+
+# Twitter API Configuration (Disabled)
+twitter:
+  enabled: false
+  api_key: ""
+  api_secret: ""
+  bearer_token: ""
+  access_token: ""
+  access_token_secret: ""
+
+  # Search parameters (kept for reference/filtering)
+  keywords:
+    - "giveaway"
+    - "free"
+    - "win"
+    - "urgent"
+    - "breaking"
+    - "crypto"
+
+  max_results: 1000
+  rate_limit_wait: false
+  collection_mode: "search"
+
+# Reddit (disabled)
+reddit:
+  enabled: false
+  client_id: ""
+  client_secret: ""
+  user_agent: "CIB_Detector/1.0"
+
+# Data Collection Settings
+data_collection:
+  mode: "file" # Changed from "api" to "file"
+  dataset_path: "./data/sample_tweets.csv" # Add path to your local file
+  platform: "twitter"
+  duration_minutes: 0
+  continue_on_error: true
+
+# Model Configuration
+supervised:
+  enabled: true
+  models:
+    - random_forest
+    - logistic_regression
+
+  random_forest:
+    n_estimators: 200
+    random_state: 42
+    class_weight: balanced
+
+  logistic_regression:
+    max_iter: 1000
+    random_state: 42
+
+unsupervised:
+  enabled: true
+
+# Processing Configuration
+preprocessing:
+  remove_urls: true
+  remove_mentions: true
+  lowercase: true
+
+bert:
+  model_name: "bert-base-uncased"
+  max_length: 128
+
+graph:
+  min_interactions: 2
+
+community:
+  algorithm: "louvain"
