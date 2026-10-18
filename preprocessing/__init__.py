@@ -1,9 +1,10 @@
 """
 Preprocessing Module
-Text cleaning, language detection, and stylometric analysis
+Text cleaning, language detection, stylometric analysis, and NLP normalization
 """
 
 from .text_cleaner import TextCleaner
 from .stylometry import StylometricAnalyzer
+from .text_normalizer import TextNormalizer
 
-__all__ = ['TextCleaner', 'StylometricAnalyzer']
+__all__ = ['TextCleaner', 'StylometricAnalyzer', 'TextNormalizer']

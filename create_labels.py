@@ -5,26 +5,31 @@ Generates ground truth labels by checking BOTH the label column and the user_id.
 import pandas as pd
 import os
 
-def create_robust_labels():
-    # Setup paths
-    input_path = "data/processed/test_data_cleaned.csv"
-    output_path = "data/labels/ground_truth_labels.csv"
-    os.makedirs("data/labels", exist_ok=True)
+def create_robust_labels(input_path: str = None, output_path: str = "data/labels/ground_truth_labels.csv"):
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    
+    if input_path is not None and os.path.exists(input_path):
+        files = [input_path]
+    else:
+        import glob
+        files = sorted(glob.glob("data/processed/*_cleaned.csv"))
+        if not files:
+            files = ["data/processed/test_data_cleaned.csv"]
 
-    print(f"Reading data from: {input_path}")
-    if not os.path.exists(input_path):
-        print("❌ Error: Cleaned data file not found.")
+    all_dfs = []
+    for f in files:
+        if os.path.exists(f):
+            print(f"Reading data from: {f}")
+            df = pd.read_csv(f)
+            df['user_id'] = df['user_id'].astype(str).str.strip()
+            all_dfs.append(df)
+
+    if not all_dfs:
+        print("❌ Error: No cleaned data files found.")
         return
 
-    df = pd.read_csv(input_path)
-    
-    # Force ID to string
-    df['user_id'] = df['user_id'].astype(str).str.strip()
-    
-    # Select unique users
-    # We take the first label we find for each user
-    users = df.groupby('user_id').first().reset_index()
-    
+    combined_df = pd.concat(all_dfs, ignore_index=True)
+    users = combined_df.groupby('user_id').first().reset_index()
     print(f"Processing {len(users)} unique users...")
 
     # --- HYBRID LABELING LOGIC ---

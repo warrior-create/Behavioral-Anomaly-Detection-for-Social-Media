@@ -43,6 +43,7 @@ supervised:
   models:
     - random_forest
     - logistic_regression
+    - xgboost
 
   random_forest:
     n_estimators: 200
@@ -71,3 +72,44 @@ graph:
 
 community:
   algorithm: "louvain"
+
+# ============================================================
+# NLP Feature Suite Configuration (Added)
+# ============================================================
+
+# TF-IDF Content Similarity
+tfidf:
+  max_features: 10000
+  ngram_range: [1, 2]         # unigrams + bigrams
+  similarity_threshold: 0.80  # flag pairs above this cosine sim
+  min_df: 2                   # minimum document frequency
+
+# Named Entity Recognition (spaCy)
+ner:
+  spacy_model: "en_core_web_sm"
+  batch_size: 64
+  # To use a larger, more accurate model:
+  # spacy_model: "en_core_web_lg"
+
+# LDA Topic Modelling
+topic_modeling:
+  n_topics: 10
+  max_features: 5000
+  max_iter: 20
+  random_state: 42
+  top_n_words: 10
+  coord_jsd_threshold: 0.10   # JS-divergence threshold for coord detection
+
+# N-gram Perplexity (AI-text detection)
+perplexity:
+  ngram_order: 3
+  smoothing_k: 0.1
+  high_perplexity_threshold: 500.0
+  # reference_corpus_path: "data/human_reference.csv"  # optional
+
+# PMI Keyword Co-occurrence
+pmi:
+  window_size: 5
+  min_freq: 2
+  top_pairs_per_user: 20
+  coord_overlap_threshold: 0.50

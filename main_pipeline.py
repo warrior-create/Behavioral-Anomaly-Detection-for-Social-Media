@@ -9,19 +9,30 @@ import sys
 from pathlib import Path
 import yaml
 from datetime import datetime
+from typing import Optional, Dict, List, Tuple
 
 # Import project modules
 from preprocessing.text_cleaner import TextCleaner
 from preprocessing.stylometry import StylometricAnalyzer
+from preprocessing.text_normalizer import TextNormalizer
 from features.bert_embeddings import BERTEmbedder
 from features.temporal_features import TemporalFeatureExtractor
+from features.tfidf_features import TFIDFAnalyzer
+from features.ner_features import NERFeatureExtractor
+from features.topic_modeling import TopicModeler
+from features.ngram_perplexity import PerplexityFeatureExtractor
+from features.pmi_cooccurrence import PMICooccurrenceAnalyzer
 from graph.graph_builder import GraphBuilder
 from graph.community_detection import CommunityDetector
+from graph.graph_feature_extractor import extract_all_graphs
 from models.train_supervised import SupervisedDetector
 from models.train_unsupervised import UnsupervisedDetector
+from models.predict import BotPredictor
 from evaluation.metrics import ModelEvaluator
 from visualization.plotly_dashboard import DashboardGenerator
 from visualization.export_gephi import GephiExporter
+from combine_features import combine_feature_files
+from create_labels import create_robust_labels
 
 # Configure logging
 logging.basicConfig(
@@ -127,36 +138,120 @@ class CIBDetectionPipeline:
             logger.info(f"Saved cleaned data to {output_path}")
     
     def run_feature_extraction(self):
-        """Step 3: Extract stylometric and embedding features"""
+        """Step 3: Extract all features — stylometric, embedding, and NLP."""
         logger.info("=" * 80)
-        logger.info("STEP 3: FEATURE EXTRACTION")
+        logger.info("STEP 3: FEATURE EXTRACTION (Stylometry + BERT + NLP Suite)")
         logger.info("=" * 80)
-        
-        # Stylometric features
-        stylo = StylometricAnalyzer()
+
         processed_files = list(Path('data/processed').glob('*_cleaned.csv'))
-        
+
+        # --- 3a. Stylometric features ---
+        stylo = None
         for file_path in processed_files:
-            logger.info(f"Extracting stylometric features from {file_path.name}")
-            features = stylo.extract_features(str(file_path))
             output_path = f"data/features/{file_path.stem}_stylo.csv"
-            features.to_csv(output_path, index=False)
-        
-        # BERT embeddings
-        embedder = BERTEmbedder(self.config.get('bert', {}))
+            if Path(output_path).exists():
+                logger.info(f"Stylometric features already exist at {output_path}, skipping.")
+            else:
+                if stylo is None:
+                    stylo = StylometricAnalyzer()
+                logger.info(f"Extracting stylometric features from {file_path.name}")
+                features = stylo.extract_features(str(file_path))
+                features.to_csv(output_path, index=False)
+
+        # --- 3b. BERT semantic embeddings ---
         for file_path in processed_files:
-            logger.info(f"Generating BERT embeddings for {file_path.name}")
-            embeddings = embedder.generate_embeddings(str(file_path))
             output_path = f"data/features/{file_path.stem}_embeddings.npy"
-            embedder.save_embeddings(embeddings, output_path)
-        
-        # Temporal features
-        temporal = TemporalFeatureExtractor()
+            if Path(output_path).exists():
+                logger.info(f"BERT embeddings already exist at {output_path}, skipping recomputation.")
+            else:
+                logger.info(f"Generating BERT embeddings for {file_path.name}")
+                embedder = BERTEmbedder(self.config.get('bert', {}))
+                embeddings = embedder.generate_embeddings(str(file_path))
+                embedder.save_embeddings(embeddings, output_path)
+
+        # --- 3c. Temporal behaviour features ---
+        temporal = None
         for file_path in processed_files:
-            logger.info(f"Extracting temporal features from {file_path.name}")
-            temp_features = temporal.extract_features(str(file_path))
             output_path = f"data/features/{file_path.stem}_temporal.csv"
-            temp_features.to_csv(output_path, index=False)
+            if Path(output_path).exists():
+                logger.info(f"Temporal features already exist at {output_path}, skipping.")
+            else:
+                if temporal is None:
+                    temporal = TemporalFeatureExtractor()
+                logger.info(f"Extracting temporal features from {file_path.name}")
+                temp_features = temporal.extract_features(str(file_path))
+                temp_features.to_csv(output_path, index=False)
+
+        # --- 3d. TF-IDF content similarity features [NLP] ---
+        tfidf_analyzer = None
+        for file_path in processed_files:
+            output_path = f"data/features/{file_path.stem}_tfidf.csv"
+            if Path(output_path).exists():
+                logger.info(f"TF-IDF features already exist at {output_path}, skipping.")
+            else:
+                if tfidf_analyzer is None:
+                    tfidf_analyzer = TFIDFAnalyzer(self.config.get('tfidf', {}))
+                logger.info(f"Extracting TF-IDF features from {file_path.name}")
+                tfidf_features = tfidf_analyzer.extract_features(str(file_path))
+                tfidf_features.to_csv(output_path, index=False)
+
+        # --- 3e. Named Entity Recognition features [NLP] ---
+        ner_extractor = None
+        for file_path in processed_files:
+            output_path = f"data/features/{file_path.stem}_ner.csv"
+            if Path(output_path).exists():
+                logger.info(f"NER features already exist at {output_path}, skipping.")
+            else:
+                try:
+                    if ner_extractor is None:
+                        ner_extractor = NERFeatureExtractor(self.config.get('ner', {}))
+                    logger.info(f"Extracting NER features from {file_path.name}")
+                    ner_features = ner_extractor.extract_features(str(file_path))
+                    ner_features.to_csv(output_path, index=False)
+                except Exception as e:
+                    logger.warning(f"NER skipped: {e}")
+
+        # --- 3f. LDA Topic Modelling features [NLP] ---
+        topic_modeler = None
+        for file_path in processed_files:
+            output_path = f"data/features/{file_path.stem}_topics.csv"
+            if Path(output_path).exists():
+                logger.info(f"Topic features already exist at {output_path}, skipping.")
+            else:
+                if topic_modeler is None:
+                    topic_modeler = TopicModeler(self.config.get('topic_modeling', {}))
+                logger.info(f"Running LDA topic modelling on {file_path.name}")
+                topic_features = topic_modeler.extract_features(str(file_path))
+                topic_features.to_csv(output_path, index=False)
+                topic_modeler.save_model('data/models/')
+
+        # --- 3g. N-gram Perplexity features [NLP] ---
+        perplexity_extractor = None
+        for file_path in processed_files:
+            output_path = f"data/features/{file_path.stem}_perplexity.csv"
+            if Path(output_path).exists():
+                logger.info(f"Perplexity features already exist at {output_path}, skipping.")
+            else:
+                if perplexity_extractor is None:
+                    perplexity_extractor = PerplexityFeatureExtractor(
+                        self.config.get('perplexity', {})
+                    )
+                logger.info(f"Computing perplexity features from {file_path.name}")
+                perplexity_features = perplexity_extractor.extract_features(str(file_path))
+                perplexity_features.to_csv(output_path, index=False)
+
+        # --- 3h. PMI Keyword Co-occurrence features [NLP] ---
+        pmi_analyzer = None
+        for file_path in processed_files:
+            output_path = f"data/features/{file_path.stem}_pmi.csv"
+            if Path(output_path).exists():
+                logger.info(f"PMI features already exist at {output_path}, skipping.")
+            else:
+                if pmi_analyzer is None:
+                    pmi_analyzer = PMICooccurrenceAnalyzer(self.config.get('pmi', {}))
+                logger.info(f"Computing PMI co-occurrence features from {file_path.name}")
+                pmi_features = pmi_analyzer.extract_features(str(file_path))
+                pmi_features.to_csv(output_path, index=False)
     
     def run_graph_construction(self):
         """Step 4: Build interaction graphs"""
@@ -172,10 +267,15 @@ class CIBDetectionPipeline:
             graph = builder.build_graph(str(file_path))
             output_path = f"data/graphs/{file_path.stem}_graph.gpickle"
             builder.save_graph(graph, output_path)
-            
+
             # Graph statistics
             stats = builder.get_graph_statistics(graph)
             logger.info(f"Graph stats: {stats}")
+
+        # --- Extract graph centrality features ---
+        logger.info("Extracting graph centrality features ...")
+        extract_all_graphs(graphs_dir='data/graphs', output_path='data/features/graph_features.csv')
+
     
     def run_community_detection(self):
         """Step 5: Detect coordinated communities"""
@@ -192,6 +292,11 @@ class CIBDetectionPipeline:
             output_path = f"data/results/{file_path.stem}_communities.csv"
             communities.to_csv(output_path, index=False)
             logger.info(f"Detected {len(communities['community_id'].unique())} communities")
+
+        # --- Combine ALL features into final_user_features.csv ---
+        logger.info("Combining all features into final_user_features.csv ...")
+        combine_feature_files()
+
     
     def run_model_training(self):
         """Step 6: Train ML models"""
@@ -199,6 +304,12 @@ class CIBDetectionPipeline:
         logger.info("STEP 6: MODEL TRAINING")
         logger.info("=" * 80)
         
+        # Ensure ground truth labels exist before training
+        label_file = Path('data/labels/ground_truth_labels.csv')
+        if not label_file.exists():
+            logger.info("Ground truth labels not found at %s. Generating automatically...", label_file)
+            create_robust_labels()
+
         # Supervised models
         if self.config.get('supervised', {}).get('enabled', True):
             supervised = SupervisedDetector(self.config.get('supervised', {}))
@@ -230,8 +341,6 @@ class CIBDetectionPipeline:
         logger.info("STEP 8: VISUALIZATION")
         logger.info("=" * 80)
         
-        
-        
         # Gephi export
         exporter = GephiExporter()
         graph_files = list(Path('data/graphs').glob('*.gpickle'))
@@ -243,6 +352,33 @@ class CIBDetectionPipeline:
         # Interactive dashboard
         dashboard = DashboardGenerator(self.config.get('visualization', {}))
         dashboard.generate_dashboard('data/results/', 'data/graphs/')
+
+    def run_prediction(self, input_file: Optional[str] = None):
+        """Step 9: Run Bot / CIB Prediction on new or existing dataset"""
+        logger.info("=" * 80)
+        logger.info("INFERENCE & BOT PREDICTION")
+        logger.info("=" * 80)
+
+        predictor = BotPredictor()
+        predictor.load_artefacts()
+
+        if input_file is None:
+            # Check for cleaned files first, then raw files
+            cleaned_candidates = sorted(list(Path('data/processed').glob('*_cleaned.csv')))
+            if cleaned_candidates:
+                input_file = str(cleaned_candidates[0])
+            else:
+                raw_candidates = sorted(list(Path('data/raw').glob('*.csv')))
+                input_file = str(raw_candidates[0]) if raw_candidates else None
+
+        if input_file and Path(input_file).exists():
+            logger.info(f"Running prediction pipeline on: {input_file}")
+            predictions = predictor.predict_from_csv(input_file)
+            logger.info(f"Predictions completed successfully for {len(predictions)} accounts.")
+            return predictions
+        else:
+            logger.error("No valid input file provided or found for prediction.")
+            return None
         
     def run_full_pipeline(self):
         """Execute complete pipeline"""
@@ -253,7 +389,9 @@ class CIBDetectionPipeline:
             steps = [
                 ("Data Collection", self.run_data_collection),
                 ("Preprocessing", self.run_preprocessing),
-                ("Feature Extraction", self.run_feature_extraction),
+                # Step 3 includes: Stylometry, BERT, Temporal,
+                # TF-IDF, NER, LDA Topics, Perplexity, PMI
+                ("Feature Extraction (NLP Suite)", self.run_feature_extraction),
                 ("Graph Construction", self.run_graph_construction),
                 ("Community Detection", self.run_community_detection),
                 ("Model Training", self.run_model_training),
@@ -299,10 +437,16 @@ def main():
         type=str,
         choices=[
             'all', 'collect', 'preprocess', 'features',
-            'graph', 'community', 'train', 'evaluate', 'visualize'
+            'graph', 'community', 'train', 'evaluate', 'visualize', 'predict'
         ],
         default='all',
         help='Run specific pipeline step'
+    )
+    parser.add_argument(
+        '--input-file',
+        type=str,
+        default=None,
+        help='Input file path for prediction or custom data'
     )
     
     args = parser.parse_args()
@@ -313,8 +457,8 @@ def main():
     # Execute requested step
     if args.step == 'all':
         pipeline.run_full_pipeline()
-    # elif args.step == 'collect':
-    #     pipeline.run_data_collection()
+    elif args.step == 'collect':
+        pipeline.run_data_collection()
     elif args.step == 'preprocess':
         pipeline.run_preprocessing()
     elif args.step == 'features':
@@ -329,6 +473,8 @@ def main():
         pipeline.run_evaluation()
     elif args.step == 'visualize':
         pipeline.run_visualization()
+    elif args.step == 'predict':
+        pipeline.run_prediction(args.input_file)
 
 
 if __name__ == "__main__":

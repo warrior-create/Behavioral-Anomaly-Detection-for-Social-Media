@@ -20,6 +20,7 @@ data/features/*
 data/graphs/*
 data/results/*
 data/visualizations/*
+data/models/*
 
 # Keep folder structure
 !data/raw/.gitkeep

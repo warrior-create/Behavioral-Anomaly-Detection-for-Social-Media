@@ -49,6 +49,11 @@ umap-learn>=0.5.3
 
 # For enhanced NLP features
 spacy>=3.5.0
+# Optional: download model after install:
+#   python -m spacy download en_core_web_sm
+
+# Advanced topic modelling (optional, but recommended)
+# gensim>=4.3.0
 
 # Testing (Optional)
 pytest>=7.2.0
